@@ -3,6 +3,8 @@ module github.com/jenkins-x-plugins/jx-health
 require (
 	github.com/Comcast/kuberhealthy/v2 v2.2.1-0.20200929183126-21763e228558
 	github.com/cpuguy83/go-md2man v1.0.10
+	github.com/jenkins-x-plugins/jx-scm v0.0.4
+	github.com/jenkins-x/go-scm v1.5.175
 	github.com/jenkins-x/jx-helpers/v3 v3.0.4
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.0
 	github.com/jenkins-x/jx-logging/v3 v3.0.2

@@ -1,7 +1,7 @@
 package health
 
 import (
-	"strconv"
+	"sort"
 	"strings"
 
 	"github.com/Comcast/kuberhealthy/v2/pkg/khstatecrd"
@@ -14,36 +14,42 @@ import (
 
 const resourceStates = "khstates"
 
-// HealthOptions common CLI arguments for working with health
-type HealthOptions struct {
+// Options common CLI arguments for working with health
+type Options struct {
 	options.KHCheckOptions
 }
 
-func (o HealthOptions) GetJenkinsXTable(ns string) (table.Table, error) {
-	result := table.Table{}
+func (o Options) GetJenkinsXTable(result *table.Table, ns string) error {
 
 	err := o.KHCheckOptions.Validate()
 	if err != nil {
-		return result, errors.Wrapf(err, "failed to validate KHCheckOptions")
+		return errors.Wrapf(err, "failed to validate KHCheckOptions")
 	}
 
 	// get a list of all Kuberhealthy states
 	states, err := o.KHCheckOptions.StateClient.List(metav1.ListOptions{}, resourceStates, ns)
 	if err != nil {
-		return table.Table{}, errors.Wrapf(err, "failed to list jenkins x states in namespace %s", ns)
+		return errors.Wrapf(err, "failed to list health states in namespace %s", ns)
 	}
 
-	o.makeTable(&result, states)
+	o.populateTable(result, states)
 
-	return result, nil
+	return nil
 }
 
-func (o HealthOptions) makeTable(result *table.Table, checks *khstatecrd.KuberhealthyStateList) {
-	// add table headers
-	result.AddRow("Check Name", "OK", "Error Message")
+func (o Options) populateTable(result *table.Table, checks *khstatecrd.KuberhealthyStateList) {
+
+	sort.Slice(checks.Items, func(i, j int) bool {
+		return checks.Items[i].Name < checks.Items[j].Name
+	})
 
 	// add Kuberhealthy check results to the table
 	for _, check := range checks.Items {
-		result.AddRow(check.Name, strconv.FormatBool(check.Spec.OK), strings.Join(check.Spec.Errors, "\n"))
+		status := "OK"
+		if !check.Spec.OK {
+			status = "ERROR"
+		}
+		result.AddRow(check.Name, check.Namespace, status, strings.Join(check.Spec.Errors, "\n"))
 	}
+
 }

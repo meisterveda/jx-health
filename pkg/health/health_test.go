@@ -15,29 +15,27 @@ import (
 )
 
 func TestHealthOptions_GetJenkinsXTable(t *testing.T) {
-	o := HealthOptions{}
+	o := Options{}
 
 	tests := []struct {
 		name string
 		want [][]string
 	}{
 		{name: "kh_defaults_ok", want: [][]string{
-			{"daemonset", "true", ""},
-			{"deployment", "true", ""},
-			{"dns-status-internal", "true", ""},
+			{"daemonset", "kh-test", "OK", ""},
+			{"deployment", "kh-test", "OK", ""},
+			{"dns-status-internal", "kh-test", "OK", ""},
 		}},
 		{name: "kh_defaults_one_fail", want: [][]string{
-			{"daemonset", "true", ""},
-			{"deployment", "false", "something bad\nhappened again"},
-			{"dns-status-internal", "true", ""},
+			{"daemonset", "kh-test", "OK", ""},
+			{"deployment", "kh-test", "ERROR", "something bad\nhappened again"},
+			{"dns-status-internal", "kh-test", "OK", ""},
 		}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			expected := table.Table{Rows: [][]string{
-				{"Check Name", "OK", "Error Message"},
-			}}
+			expected := table.Table{Rows: [][]string{}}
 
 			for _, row := range tt.want {
 				expected.AddRow(row...)
@@ -46,7 +44,7 @@ func TestHealthOptions_GetJenkinsXTable(t *testing.T) {
 			states := loadTestStates(t, tt.name)
 
 			got := table.Table{}
-			o.makeTable(&got, states)
+			o.populateTable(&got, states)
 
 			if !reflect.DeepEqual(got.Rows, expected.Rows) {
 				t.Errorf("GetJenkinsXTable() got = %v, want %v", got, tt.want)

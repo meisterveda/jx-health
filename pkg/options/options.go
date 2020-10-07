@@ -41,16 +41,16 @@ func (o *KHCheckOptions) Validate() error {
 }
 
 // ClientStateClient creates a rest client to use for interacting with Kuberhealthy state CRDs
-func ClientStateClient(cfg *rest.Config, GroupName string, GroupVersion string) (*khstatecrd.KuberhealthyStateClient, error) {
+func ClientStateClient(cfg *rest.Config, groupName string, groupVersion string) (*khstatecrd.KuberhealthyStateClient, error) {
 	var err error
 
-	err = khcheckcrd.ConfigureScheme(GroupName, GroupVersion)
+	err = khcheckcrd.ConfigureScheme(groupName, groupVersion)
 	if err != nil {
 		return &khstatecrd.KuberhealthyStateClient{}, err
 	}
 
 	config := *cfg
-	config.ContentConfig.GroupVersion = &schema.GroupVersion{Group: GroupName, Version: GroupVersion}
+	config.ContentConfig.GroupVersion = &schema.GroupVersion{Group: groupName, Version: groupVersion}
 	config.APIPath = "/apis"
 	config.NegotiatedSerializer = serializer.WithoutConversionCodecFactory{CodecFactory: scheme.Codecs}
 	config.UserAgent = rest.DefaultKubernetesUserAgent()

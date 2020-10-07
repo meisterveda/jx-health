@@ -40,6 +40,7 @@ golangci-lint run \
   -E maligned \
   -E typecheck \
   --skip-dirs vendor \
+  --skip-dirs cmd/docs \
   --deadline 15m0s \
   --verbose \
   --build-tags build
