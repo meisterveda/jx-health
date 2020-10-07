@@ -30,8 +30,11 @@ var (
 		# prints all health statuses for the current namespace in a table
 		%s get status
 
-		# prints specific health check statuses by passing arguments
-		%s get status default jenkins-x
+		# prints all health statuses for a specific namespace
+		%s get status --namespace
+
+		# prints all health statuses for all accessible namespace
+		%s get status --all-namespaces
 	`)
 )
 
@@ -39,11 +42,9 @@ var (
 type Options struct {
 	HealthOptions healthopts.Options
 	Args          []string
-	All           bool
 	AllNamespaces bool
 	Namespace     string
-
-	KubeClient kubernetes.Interface
+	KubeClient    kubernetes.Interface
 }
 
 // NewCmdStatus creates a command object for the command

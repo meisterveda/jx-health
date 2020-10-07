@@ -13,6 +13,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
 	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0
+	k8s.io/api v0.19.2
 	k8s.io/apimachinery v0.19.2
 	k8s.io/client-go v0.19.2
 	sigs.k8s.io/yaml v1.2.0

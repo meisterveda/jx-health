@@ -27,11 +27,8 @@ Prints health statuses in a table
 ```
   -A, --all-namespaces     if present, list the requested object(s) across all namespaces.
                            Namespace in current context is ignored even if specified with --namespace.
-  -b, --batch-mode         Runs in batch mode without prompting for user input
   -h, --help               help for status
-      --log-level string   Sets the logging level. If not specified defaults to $JX_LOG_LEVEL
   -n, --namespace string   namespace to get status checks, defaults to current namespace
-      --verbose            Enables verbose output. The environment variable JX_LOG_LEVEL has precedence over this flag and allows setting the logging level to any value of: panic, fatal, error, warn, info, debug, trace
 ```
 
 ### SEE ALSO
