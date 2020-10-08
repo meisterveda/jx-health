@@ -172,7 +172,7 @@ lint: ## Lint the code
 	./hack/generate.sh
 
 .PHONY: all
-all: fmt build test lint generate-refdocs
+all: fmt build test lint docs
 
 install-refdocs:
 	$(GO) get github.com/jenkins-x/gen-crd-api-reference-docs
@@ -180,7 +180,6 @@ install-refdocs:
 generate-refdocs: install-refdocs
 	gen-crd-api-reference-docs -config "hack/configdocs/config.json" \
 	-template-dir hack/configdocs/templates \
-    -api-dir "./pkg/apis/gitops/v1alpha1" \
     -out-file docs/config.md
 
 bin/docs:

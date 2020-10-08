@@ -29,6 +29,10 @@ Namespace in current context is ignored even if specified with \-\-namespace.
     help for status
 
 .PP
+\fB\-\-info\fP[=false]
+    provide information links for checks
+
+.PP
 \fB\-n\fP, \fB\-\-namespace\fP=""
     namespace to get status checks, defaults to current namespace
 
@@ -39,8 +43,12 @@ Namespace in current context is ignored even if specified with \-\-namespace.
   jx\-health get status
 
 .PP
-# prints specific health check statuses by passing arguments
-  jx\-health get status default jenkins\-x
+# prints all health statuses for a specific namespace
+  jx\-health get status \-\-namespace
+
+.PP
+# prints all health statuses for all accessible namespace
+  jx\-health get status \-\-all\-namespaces
 
 
 .SH SEE ALSO

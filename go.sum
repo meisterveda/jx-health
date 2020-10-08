@@ -276,6 +276,7 @@ github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOl
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
 github.com/jenkins-x-plugins/jx-scm v0.0.4 h1:raOoZjcmkUVVLeexeFKWO7QjW9YAWpkOMtYs6+vDsp0=
 github.com/jenkins-x-plugins/jx-scm v0.0.4/go.mod h1:ed17UW5XHfhjZAJXE3Nnm97SdidWyNQ+sAgsn5cDgvU=
+github.com/jenkins-x/gen-crd-api-reference-docs v0.1.6 h1:jV0THW6KeMYC0rcawdPeix7+ZmDZMR0UMU+QJr5gU6Y=
 github.com/jenkins-x/gen-crd-api-reference-docs v0.1.6/go.mod h1:a4dzSf/nNLMMMqultm6IlV/04xq26uICEYPkSTOahWQ=
 github.com/jenkins-x/go-scm v1.5.164 h1:p+N22JDRRuWLg/MTBD58eWoJhTdYYTx3FejaXG+pUwo=
 github.com/jenkins-x/go-scm v1.5.164/go.mod h1:wJgj7PfgsCs+YAXC0vEj43g48HKf94apSyza62ADxKY=
@@ -398,6 +399,7 @@ github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6So
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/russross/blackfriday v1.5.2 h1:HyvC0ARfnZBqnXwABFeSZHpKvJHJJfPz81GNueLj0oo=
 github.com/russross/blackfriday v1.5.2/go.mod h1:JO/DiYxRf+HjHt06OyowR9PTA263kcR/rfWxYHBV53g=
+github.com/russross/blackfriday/v2 v2.0.1 h1:lPqVAte+HuHNfhJ/0LC98ESWRz8afy9tM/0RK8m9o+Q=
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/satori/go.uuid v1.2.1-0.20180103174451-36e9d2ebbde5/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/sergi/go-diff v1.0.0/go.mod h1:0CfEIISq7TuYL3j771MWULgwwjU+GofnZX9QAmXWZgo=
@@ -407,6 +409,7 @@ github.com/shurcooL/githubv4 v0.0.0-20190718010115-4ba037080260 h1:xKXiRdBUtMVp6
 github.com/shurcooL/githubv4 v0.0.0-20190718010115-4ba037080260/go.mod h1:hAF0iLZy4td2EX+/8Tw+4nodhlMrwN3HupfaXj3zkGo=
 github.com/shurcooL/graphql v0.0.0-20181231061246-d48a9a75455f h1:tygelZueB1EtXkPI6mQ4o9DQ0+FKW41hTbunoXZCTqk=
 github.com/shurcooL/graphql v0.0.0-20181231061246-d48a9a75455f/go.mod h1:AuYgA5Kyo4c7HfUmvRGs/6rGlMMV/6B1bVnB9JxJEEg=
+github.com/shurcooL/sanitized_anchor_name v1.0.0 h1:PdmoCO6wvbs+7yrJyMORt4/BmY5IYyJwS/kOiWx8mHo=
 github.com/shurcooL/sanitized_anchor_name v1.0.0/go.mod h1:1NzhyTcUVG4SuEtjjoZeVRXNmyL/1OwPU0+IJeTBvfc=
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
 github.com/sirupsen/logrus v1.4.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
@@ -723,6 +726,7 @@ k8s.io/client-go v0.19.2/go.mod h1:S5wPhCqyDNAlzM9CnEdgTGV4OqhsW3jGO1UM1epwfJA=
 k8s.io/code-generator v0.19.2/go.mod h1:moqLn7w0t9cMs4+5CQyxnfA/HV8MF6aAVENF+WZZhgk=
 k8s.io/gengo v0.0.0-20190128074634-0689ccc1d7d6/go.mod h1:ezvh/TsK7cY6rbqRK0oQQ8IAqLxYwwyPxAX1Pzy0ii0=
 k8s.io/gengo v0.0.0-20200413195148-3a45101e95ac/go.mod h1:ezvh/TsK7cY6rbqRK0oQQ8IAqLxYwwyPxAX1Pzy0ii0=
+k8s.io/gengo v0.0.0-20200428234225-8167cfdcfc14 h1:t4L10Qfx/p7ASH3gXCdIUtPbbIuegCoUJf3TMSFekjw=
 k8s.io/gengo v0.0.0-20200428234225-8167cfdcfc14/go.mod h1:ezvh/TsK7cY6rbqRK0oQQ8IAqLxYwwyPxAX1Pzy0ii0=
 k8s.io/helm v2.16.10+incompatible/go.mod h1:LZzlS4LQBHfciFOurYBFkCMTaZ0D1l+p0teMg7TSULI=
 k8s.io/klog v0.2.0/go.mod h1:Gq+BEi5rUBO/HRz0bTSXDUcqjScdoY3a9IHpCEIOOfk=
