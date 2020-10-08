@@ -31,12 +31,14 @@ func TestHealthOptions_GetJenkinsXTable(t *testing.T) {
 		}},
 		{name: "kh_defaults_one_fail", want: [][]string{
 			{"daemonset", "kh-test", "OK", ""},
-			{"deployment", "kh-test", "ERROR", "something bad\nhappened again"},
+			{"deployment", "kh-test", "ERROR", "something bad"},
+			{"", "", "", "happened again"},
 			{"dns-status-internal", "kh-test", "OK", ""},
 		}},
 		{name: "kh_info", info: true, want: [][]string{
 			{"daemonset", "kh-test", "OK", "", "https://github.com/Comcast/kuberhealthy/blob/230c4f1/cmd/daemonset-check/README.md"},
-			{"deployment", "kh-test", "ERROR", "something bad\nhappened again", "https://github.com/Comcast/kuberhealthy/blob/230c4f1/cmd/deployment-check/README.md"},
+			{"deployment", "kh-test", "ERROR", "something bad", "https://github.com/Comcast/kuberhealthy/blob/230c4f1/cmd/deployment-check/README.md"},
+			{"", "", "", "happened again"},
 			{"dns-status-internal", "kh-test", "OK", "", "https://github.com/Comcast/kuberhealthy/blob/230c4f1/cmd/dns-resolution-check/README.md"},
 		}},
 	}

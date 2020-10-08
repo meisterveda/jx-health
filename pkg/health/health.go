@@ -2,7 +2,6 @@ package health
 
 import (
 	"sort"
-	"strings"
 
 	"github.com/jenkins-x-plugins/jx-health/pkg/health/lookup"
 
@@ -55,14 +54,38 @@ func (o Options) populateTable(result *table.Table, checks *khstatecrd.Kuberheal
 		if !check.Spec.OK {
 			status = termcolor.ColorError("ERROR")
 		}
-		rowEntries := []string{check.Name, check.Namespace, status, termcolor.ColorError(strings.Join(check.Spec.Errors, "\n"))}
-		if o.Info {
-			informationDetail := o.InfoData.Info[check.Name]
 
-			rowEntries = append(rowEntries, informationDetail)
+		// get matching information link
+		informationDetail := o.InfoData.Info[check.Name]
+
+		// depending on if there are errors or how many there are we want to format the table to it is easy to consume
+		// Name | Namespace | Status | Error Message        | Info (optional)
+		// foo    jx          ok
+		// bar    jx          error    first error for bar
+		//                             second error for bar
+		// cheese jx          ok
+		rowEntries := []string{check.Name, check.Namespace, status}
+		if len(check.Spec.Errors) == 0 {
+			rowEntries = append(rowEntries, "")
+			if o.Info {
+				rowEntries = append(rowEntries, informationDetail)
+			}
+			result.AddRow(rowEntries...)
+		} else {
+			rowEntries = append(rowEntries, check.Spec.Errors[0])
+			if o.Info {
+				rowEntries = append(rowEntries, informationDetail)
+			}
+			result.AddRow(rowEntries...)
+
+			// if we have multiple errors lets format the table so all errors appear underneath in the column
+			if len(check.Spec.Errors) > 1 {
+				for i := 1; i < len(check.Spec.Errors); i++ {
+					result.AddRow("", "", "", check.Spec.Errors[i])
+				}
+			}
 		}
 
-		result.AddRow(rowEntries...)
 	}
 
 }
