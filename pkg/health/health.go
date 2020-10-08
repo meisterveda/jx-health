@@ -4,6 +4,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/jenkins-x-plugins/jx-health/pkg/health/lookup"
+
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+
 	"github.com/Comcast/kuberhealthy/v2/pkg/khstatecrd"
 
 	"github.com/jenkins-x-plugins/jx-health/pkg/options"
@@ -17,6 +21,8 @@ const resourceStates = "khstates"
 // Options common CLI arguments for working with health
 type Options struct {
 	options.KHCheckOptions
+	Info     bool
+	InfoData lookup.LoopkupData
 }
 
 func (o Options) GetJenkinsXTable(result *table.Table, ns string) error {
@@ -45,11 +51,18 @@ func (o Options) populateTable(result *table.Table, checks *khstatecrd.Kuberheal
 
 	// add Kuberhealthy check results to the table
 	for _, check := range checks.Items {
-		status := "OK"
+		status := termcolor.ColorInfo("OK")
 		if !check.Spec.OK {
-			status = "ERROR"
+			status = termcolor.ColorError("ERROR")
 		}
-		result.AddRow(check.Name, check.Namespace, status, strings.Join(check.Spec.Errors, "\n"))
+		rowEntries := []string{check.Name, check.Namespace, status, termcolor.ColorError(strings.Join(check.Spec.Errors, "\n"))}
+		if o.Info {
+			informationDetail := o.InfoData.Info[check.Name]
+
+			rowEntries = append(rowEntries, informationDetail)
+		}
+
+		result.AddRow(rowEntries...)
 	}
 
 }

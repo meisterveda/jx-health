@@ -6,6 +6,10 @@ import (
 	"os"
 	"sort"
 
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
+
+	"github.com/jenkins-x-plugins/jx-health/pkg/health/lookup"
+
 	"github.com/jenkins-x/jx-helpers/v3/pkg/table"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -65,6 +69,7 @@ func NewCmdStatus() (*cobra.Command, *Options) {
 	}
 
 	cmd.Flags().BoolVarP(&o.AllNamespaces, "all-namespaces", "A", false, "if present, list the requested object(s) across all namespaces.\nNamespace in current context is ignored even if specified with --namespace.")
+	cmd.Flags().BoolVarP(&o.HealthOptions.Info, "info", "", false, "provide information links for checks")
 	cmd.Flags().StringVarP(&o.Namespace, "namespace", "n", "", "namespace to get status checks, defaults to current namespace")
 
 	return cmd, o
@@ -88,6 +93,13 @@ func (o *Options) Validate() error {
 		return errors.Wrapf(err, "error building kubernetes clientset")
 	}
 
+	// if user wants information linked to any health check status then lookup the information we have
+	if o.HealthOptions.Info {
+		o.HealthOptions.InfoData, err = lookup.NewLookupData()
+		if err != nil {
+			log.Logger().Warnf("unable to lookup health check information: %v", err)
+		}
+	}
 	return nil
 }
 
@@ -106,7 +118,11 @@ func (o *Options) Run() error {
 	resultTable := table.CreateTable(os.Stdout)
 
 	// add table headers
-	resultTable.AddRow("Name", "Namespace", "Status", "Error Message")
+	defaultHeaders := []string{"Name", "Namespace", "Status", "Error Message"}
+	if o.HealthOptions.Info {
+		defaultHeaders = append(defaultHeaders, "Information")
+	}
+	resultTable.AddRow(defaultHeaders...)
 
 	for _, n := range namespaces {
 		err := o.HealthOptions.GetJenkinsXTable(&resultTable, n)

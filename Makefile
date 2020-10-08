@@ -192,3 +192,7 @@ docs: bin/docs #generate-refdocs ## update docs
 	@./bin/docs --target=./docs/cmd
 	@./bin/docs --target=./docs/man/man1 --kind=man
 	@rm -f ./bin/docs
+
+.PHONY: bind
+bind:
+	go-bindata -o pkg/health/lookup/bindata.go -pkg lookup pkg/health/lookup/static_data/

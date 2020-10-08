@@ -1,0 +1,60 @@
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
+apiVersion: v1
+items:
+  - apiVersion: comcast.github.io/v1
+    kind: KuberhealthyState
+    metadata:
+      creationTimestamp: "2020-09-29T21:13:11Z"
+      generation: 1993
+      name: daemonset
+      namespace: kh-test
+      resourceVersion: "5579524"
+      selfLink: /apis/comcast.github.io/v1/namespaces/kuberhealthy/khstates/daemonset
+      uid: 3c23e31e-6b82-4501-8db0-0a9453a01ed4
+    spec:
+      AuthoritativePod: kuberhealthy-6978986794-lchk6
+      Errors: []
+      LastRun: "2020-10-06T18:32:00.543786191Z"
+      Namespace: kh-test
+      OK: true
+      RunDuration: 13.747775565s
+      uuid: f7c76c76-bc2d-48f1-831e-9c181fa19a3e
+  - apiVersion: comcast.github.io/v1
+    kind: KuberhealthyState
+    metadata:
+      creationTimestamp: "2020-09-29T21:13:11Z"
+      generation: 2983
+      name: deployment
+      namespace: kh-test
+      resourceVersion: "5579905"
+      selfLink: /apis/comcast.github.io/v1/namespaces/kuberhealthy/khstates/deployment
+      uid: e37f9df2-4a4a-4310-9373-7432ee160300
+    spec:
+      AuthoritativePod: kuberhealthy-6978986794-lchk6
+      Errors: ["something bad","happened again"]
+      LastRun: "2020-10-06T18:32:35.664744938Z"
+      Namespace: kh-test
+      OK: false
+      RunDuration: 48.865442547s
+      uuid: c9373c9a-2530-4d1d-9aaf-d89a0a960b22
+  - apiVersion: comcast.github.io/v1
+    kind: KuberhealthyState
+    metadata:
+      creationTimestamp: "2020-09-29T21:13:11Z"
+      generation: 14890
+      name: dns-status-internal
+      namespace: kh-test
+      resourceVersion: "5581325"
+      selfLink: /apis/comcast.github.io/v1/namespaces/kuberhealthy/khstates/dns-status-internal
+      uid: 832b79cf-3529-4eb2-8c7d-f1d6d4270aa4
+    spec:
+      AuthoritativePod: kuberhealthy-6978986794-lchk6
+      Errors: []
+      LastRun: "2020-10-06T18:35:49.143124806Z"
+      Namespace: kh-test
+      OK: true
+      RunDuration: 2.345373215s
+      uuid: 91b1dea0-38ac-4695-9679-295190e09638

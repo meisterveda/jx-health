@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/jenkins-x-plugins/jx-health/pkg/health/lookup"
+
 	"sigs.k8s.io/yaml"
 
 	"github.com/Comcast/kuberhealthy/v2/pkg/khstatecrd"
@@ -19,6 +21,7 @@ func TestHealthOptions_GetJenkinsXTable(t *testing.T) {
 
 	tests := []struct {
 		name string
+		info bool
 		want [][]string
 	}{
 		{name: "kh_defaults_ok", want: [][]string{
@@ -31,9 +34,21 @@ func TestHealthOptions_GetJenkinsXTable(t *testing.T) {
 			{"deployment", "kh-test", "ERROR", "something bad\nhappened again"},
 			{"dns-status-internal", "kh-test", "OK", ""},
 		}},
+		{name: "kh_info", info: true, want: [][]string{
+			{"daemonset", "kh-test", "OK", "", "https://github.com/Comcast/kuberhealthy/blob/230c4f1/cmd/daemonset-check/README.md"},
+			{"deployment", "kh-test", "ERROR", "something bad\nhappened again", "https://github.com/Comcast/kuberhealthy/blob/230c4f1/cmd/deployment-check/README.md"},
+			{"dns-status-internal", "kh-test", "OK", "", "https://github.com/Comcast/kuberhealthy/blob/230c4f1/cmd/dns-resolution-check/README.md"},
+		}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			if tt.info {
+				o.Info = true
+				var err error
+				o.InfoData, err = lookup.NewLookupData()
+				assert.NoError(t, err, "failed to lookup test data")
+			}
 
 			expected := table.Table{Rows: [][]string{}}
 

@@ -21,4 +21,18 @@ See the [jx-health command reference](docs/cmd/jx-health.md#see-also)
 
 Golang 1.15
 
+If you get this error when building:
+```
+# github.com/jenkins-x-plugins/jx-health/pkg/health/lookup
+pkg/health/lookup/lookup.go:19:20: undefined: Asset
+make: *** [build] Error 2
+```
+You need to run:
+```
+go get -u github.com/go-bindata/go-bindata/...
+```
+and
+```
+make build
+```
 You can now build this repository using your local modifications and try the locally built binary in `build/jx-health` or run the unit tests via `make test`

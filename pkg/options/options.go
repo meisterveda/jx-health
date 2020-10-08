@@ -56,5 +56,6 @@ func ClientStateClient(cfg *rest.Config, groupName string, groupVersion string) 
 	config.UserAgent = rest.DefaultKubernetesUserAgent()
 
 	client, err := rest.RESTClientFor(&config)
+
 	return khstatecrd.CreateClient(client), err
 }
