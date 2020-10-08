@@ -1,7 +1,7 @@
 module github.com/jenkins-x-plugins/jx-health
 
 require (
-	github.com/Comcast/kuberhealthy/v2 v2.2.1-0.20200929183126-21763e228558
+	github.com/Comcast/kuberhealthy/v2 v2.2.1-0.20201008180926-54448ab4f4c8
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/go-bindata/go-bindata v3.1.2+incompatible // indirect
 	github.com/jenkins-x-plugins/jx-scm v0.0.4
@@ -20,7 +20,5 @@ require (
 	k8s.io/client-go v0.19.2
 	sigs.k8s.io/yaml v1.2.0
 )
-
-replace github.com/Comcast/kuberhealthy/v2 => github.com/jenkins-x/kuberhealthy/v2 v2.2.1-0.20201006145243-ed3af74e6c6d
 
 go 1.15
