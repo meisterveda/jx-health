@@ -1,7 +1,15 @@
 package health
 
 import (
+	"os"
+	"os/signal"
 	"sort"
+
+	"github.com/jenkins-x/jx-helpers/v3/pkg/knative_pkg/duck"
+
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
+
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/jenkins-x-plugins/jx-health/pkg/health/lookup"
 
@@ -12,7 +20,13 @@ import (
 	"github.com/jenkins-x-plugins/jx-health/pkg/options"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/table"
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/dynamic/dynamicinformer"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 )
 
 const resourceStates = "khstates"
@@ -50,42 +64,125 @@ func (o Options) populateTable(result *table.Table, checks *khstatecrd.Kuberheal
 
 	// add Kuberhealthy check results to the table
 	for _, check := range checks.Items {
-		status := termcolor.ColorInfo("OK")
-		if !check.Spec.OK {
-			status = termcolor.ColorError("ERROR")
-		}
-
-		// get matching information link
-		informationDetail := o.InfoData.Info[check.Name]
-
-		// depending on if there are errors or how many there are we want to format the table to it is easy to consume
-		// Name | Namespace | Status | Error Message        | Info (optional)
-		// foo    jx          ok
-		// bar    jx          error    first error for bar
-		//                             second error for bar
-		// cheese jx          ok
-		rowEntries := []string{check.Name, check.Namespace, status}
-		if len(check.Spec.Errors) == 0 {
-			rowEntries = append(rowEntries, "")
-			if o.Info {
-				rowEntries = append(rowEntries, informationDetail)
-			}
-			result.AddRow(rowEntries...)
-		} else {
-			rowEntries = append(rowEntries, check.Spec.Errors[0])
-			if o.Info {
-				rowEntries = append(rowEntries, informationDetail)
-			}
-			result.AddRow(rowEntries...)
-
-			// if we have multiple errors lets format the table so all errors appear underneath in the column
-			if len(check.Spec.Errors) > 1 {
-				for i := 1; i < len(check.Spec.Errors); i++ {
-					result.AddRow("", "", "", check.Spec.Errors[i])
-				}
-			}
-		}
+		o.populateRow(result, check)
 
 	}
+}
 
+func (o Options) populateRow(result *table.Table, check khstatecrd.KuberhealthyState) {
+	status := termcolor.ColorInfo("OK")
+	if !check.Spec.OK {
+		status = termcolor.ColorError("ERROR")
+	}
+
+	// get matching information link
+	informationDetail := o.InfoData.Info[check.Name]
+
+	// depending on if there are errors or how many there are we want to format the table to it is easy to consume
+	// Name | Namespace | Status | Error Message        | Info (optional)
+	// foo    jx          ok
+	// bar    jx          error    first error for bar
+	//                             second error for bar
+	// cheese jx          ok
+	rowEntries := []string{check.Name, check.Namespace, status}
+	if len(check.Spec.Errors) == 0 {
+		rowEntries = append(rowEntries, "")
+		if o.Info {
+			rowEntries = append(rowEntries, informationDetail)
+		}
+		result.AddRow(rowEntries...)
+	} else {
+		rowEntries = append(rowEntries, check.Spec.Errors[0])
+		if o.Info {
+			rowEntries = append(rowEntries, informationDetail)
+		}
+		result.AddRow(rowEntries...)
+
+		// if we have multiple errors lets format the table so all errors appear underneath in the column
+		if len(check.Spec.Errors) > 1 {
+			for i := 1; i < len(check.Spec.Errors); i++ {
+				result.AddRow("", "", "", check.Spec.Errors[i])
+			}
+		}
+	}
+}
+
+func (o Options) WatchStates(cfg *rest.Config) error {
+
+	// Grab a dynamic interface that we can create informers from
+	dc, err := dynamic.NewForConfig(cfg)
+	if err != nil {
+		return errors.Wrapf(err, "could not generate dynamic client for config")
+	}
+	// Create a factory object that we can say "hey, I need to watch this resource"
+	// and it will give us back an informer for it
+	f := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dc, 0, v1.NamespaceAll, nil)
+	// Retrieve a "GroupVersionResource" type that we need when generating our informer from our dynamic factory
+	gvr, _ := schema.ParseResourceArg("khstates.v1.comcast.github.io")
+	// Finally, create our informer for deployments!
+	i := f.ForResource(*gvr)
+
+	stopCh := make(chan struct{})
+	go o.startWatching(stopCh, i.Informer())
+	sigCh := make(chan os.Signal)
+	signal.Notify(sigCh, os.Kill, os.Interrupt)
+	<-sigCh
+	close(stopCh)
+
+	return nil
+}
+
+func (o Options) startWatching(stopCh <-chan struct{}, s cache.SharedIndexInformer) {
+	handlers := cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			newUnstructured := obj.(*unstructured.Unstructured)
+			newState := &khstatecrd.KuberhealthyState{}
+
+			err := duck.FromUnstructured(newUnstructured, newState)
+			if err != nil {
+				log.Logger().Infof("error converting unstructured object %s into KuberhealthyState: %v", newUnstructured.GetName(), err)
+				return
+			}
+			o.writeRow(newState)
+		},
+		UpdateFunc: func(oldObj, obj interface{}) {
+
+			newUnstructured := obj.(*unstructured.Unstructured)
+			newState := &khstatecrd.KuberhealthyState{}
+
+			err := duck.FromUnstructured(newUnstructured, newState)
+			if err != nil {
+				log.Logger().Infof("error converting unstructured object %s into KuberhealthyState: %v", newUnstructured.GetName(), err)
+				return
+			}
+
+			oldUnstructured := obj.(*unstructured.Unstructured)
+			oldState := &khstatecrd.KuberhealthyState{}
+
+			err = duck.FromUnstructured(oldUnstructured, oldState)
+			if err != nil {
+				log.Logger().Infof("error converting unstructured object %s into KuberhealthyState: %v", oldUnstructured.GetName(), err)
+				return
+			}
+
+			if newState.Spec.OK != oldState.Spec.OK {
+				o.writeRow(newState)
+			}
+		},
+	}
+	s.AddEventHandler(handlers)
+	s.Run(stopCh)
+}
+
+func (o Options) writeRow(state *khstatecrd.KuberhealthyState) {
+
+	// because we are using a dynamic resource informer we are receiving unstructured objects which dont have the .spec
+	// details, so we need to look it up
+	//rs, err := o.StateClient.Get(metav1.GetOptions{}, resourceStates, state.GetName(), state.GetNamespace())
+
+	dereferencedState := *state
+	t := table.CreateTable(os.Stdout)
+	o.populateRow(&t, dereferencedState)
+
+	t.Render()
 }

@@ -6,6 +6,8 @@ import (
 	"os"
 	"sort"
 
+	"k8s.io/client-go/rest"
+
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 
 	"github.com/jenkins-x-plugins/jx-health/pkg/health/lookup"
@@ -47,8 +49,10 @@ type Options struct {
 	HealthOptions healthopts.Options
 	Args          []string
 	AllNamespaces bool
+	Watch         bool
 	Namespace     string
 	KubeClient    kubernetes.Interface
+	cfg           *rest.Config
 }
 
 // NewCmdStatus creates a command object for the command
@@ -71,6 +75,7 @@ func NewCmdStatus() (*cobra.Command, *Options) {
 	cmd.Flags().BoolVarP(&o.AllNamespaces, "all-namespaces", "A", false, "if present, list the requested object(s) across all namespaces.\nNamespace in current context is ignored even if specified with --namespace.")
 	cmd.Flags().BoolVarP(&o.HealthOptions.Info, "info", "", false, "provide information links for checks")
 	cmd.Flags().StringVarP(&o.Namespace, "namespace", "n", "", "namespace to get status checks, defaults to current namespace")
+	cmd.Flags().BoolVarP(&o.Watch, "watch", "w", false, "after listing/getting the requested object, watch for changes")
 
 	return cmd, o
 }
@@ -83,12 +88,12 @@ func (o *Options) Validate() error {
 	}
 
 	f := kubeclient.NewFactory()
-	cfg, err := f.CreateKubeConfig()
+	o.cfg, err = f.CreateKubeConfig()
 	if err != nil {
 		return errors.Wrapf(err, "failed to get kubernetes config")
 	}
 
-	o.KubeClient, err = kubernetes.NewForConfig(cfg)
+	o.KubeClient, err = kubernetes.NewForConfig(o.cfg)
 	if err != nil {
 		return errors.Wrapf(err, "error building kubernetes clientset")
 	}
@@ -136,6 +141,14 @@ func (o *Options) Run() error {
 	}
 
 	resultTable.Render()
+
+	if o.Watch {
+		//watchTable := table.CreateTable(os.Stdout)
+		err = o.HealthOptions.WatchStates(o.cfg)
+		if err != nil {
+			return errors.Wrapf(err, "failed to watch health states")
+		}
+	}
 	return nil
 }
 
