@@ -1,19 +1,21 @@
 package status
 
 import (
-	"context"
 	"fmt"
 	"os"
-	"sort"
+	"strings"
+
+	v1 "k8s.io/api/core/v1"
+
+	"github.com/liggitt/tabwriter"
+
+	"k8s.io/kubernetes/pkg/printers"
 
 	"k8s.io/client-go/rest"
 
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 
 	"github.com/jenkins-x-plugins/jx-health/pkg/health/lookup"
-
-	"github.com/jenkins-x/jx-helpers/v3/pkg/table"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/jenkins-x/jx-kube-client/v3/pkg/kubeclient"
 
@@ -115,71 +117,55 @@ func (o *Options) Run() error {
 		return errors.Wrapf(err, "failed to validate status options")
 	}
 
-	namespaces, err := o.getNamespaces()
-	if err != nil {
-		return errors.Wrapf(err, "failed to get which namespaces to look for health statuses")
-	}
-
-	resultTable := table.CreateTable(os.Stdout)
-
 	// add table headers
-	defaultHeaders := []string{"Name", "Namespace", "Status", "Error Message"}
+	table := printers.GetNewTabWriter(os.Stdout)
+	table.Init(os.Stdout, 30, 0, 3, ' ', tabwriter.RememberWidths)
+
+	defaultHeaders := []string{"NAME", "NAMESPACE", "STATUS", "ERROR MESSAGE"}
 	if o.HealthOptions.Info {
-		defaultHeaders = append(defaultHeaders, "Information")
-	}
-	resultTable.AddRow(defaultHeaders...)
-
-	for _, n := range namespaces {
-		err := o.HealthOptions.GetJenkinsXTable(&resultTable, n)
-		if err != nil {
-			return errors.Wrapf(err, "failed to build health table, is Kuberhealthy installed?")
-		}
+		defaultHeaders = append(defaultHeaders, "INFORMATION")
 	}
 
-	if len(resultTable.Rows) < 2 { // first row is the column headers
-		return fmt.Errorf("failed to find any health status rows for namespace %s", o.Namespace)
-	}
+	fmt.Fprintln(table, strings.Join(defaultHeaders, "\t"))
 
-	resultTable.Render()
+	namespace, err := o.getNamespace()
+	if err != nil {
+		return errors.Wrapf(err, "failed to work out what namespace to use")
+	}
 
 	if o.Watch {
-		//watchTable := table.CreateTable(os.Stdout)
-		err = o.HealthOptions.WatchStates(o.cfg)
+		err = o.HealthOptions.WatchStates(table, o.cfg, namespace)
 		if err != nil {
 			return errors.Wrapf(err, "failed to watch health states")
 		}
+	} else {
+		err := o.HealthOptions.GetJenkinsXTable(table, namespace)
+		if err != nil {
+			return errors.Wrapf(err, "failed to build health table, is Kuberhealthy installed?")
+		}
+		table.Flush()
 	}
+
 	return nil
 }
 
 // decide the namespace to search for kuberhealthy states in this order
-// 1. if --all-namespaces set then first lookup the namespaces user has permission to list
-// 2. if --namespace is set then use the value provided
+// 1. --all-namespaces takes priority
+// 2. --namespace when user specifies the namespace
 // 3. the default is to search for health statuses in the current namespace
-func (o *Options) getNamespaces() ([]string, error) {
-	var namespaces []string
+func (o *Options) getNamespace() (string, error) {
+	var namespace string
+	var err error
 	switch {
 	case o.AllNamespaces:
-		// get all namespaces
-		nList, err := o.KubeClient.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
-		if err != nil {
-			return nil, errors.Wrapf(err, "error listing namespaces")
-		}
-		for _, n := range nList.Items {
-			namespaces = append(namespaces, n.Name)
-		}
-		sort.Strings(namespaces)
-
+		namespace = v1.NamespaceAll
 	case o.Namespace != "":
-		namespaces = []string{o.Namespace}
-
+		namespace = o.Namespace
 	default:
-		ns, err := kubeclient.CurrentNamespace()
+		namespace, err = kubeclient.CurrentNamespace()
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to find the current namespace")
+			return namespace, errors.Wrapf(err, "failed to find the current namespace")
 		}
-		namespaces = []string{ns}
-
 	}
-	return namespaces, nil
+	return namespace, nil
 }

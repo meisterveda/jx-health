@@ -12,8 +12,6 @@ import (
 
 	"github.com/Comcast/kuberhealthy/v2/pkg/khstatecrd"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/jenkins-x/jx-helpers/v3/pkg/table"
 )
 
 func TestHealthOptions_GetJenkinsXTable(t *testing.T) {
@@ -52,18 +50,11 @@ func TestHealthOptions_GetJenkinsXTable(t *testing.T) {
 				assert.NoError(t, err, "failed to lookup test data")
 			}
 
-			expected := table.Table{Rows: [][]string{}}
-
-			for _, row := range tt.want {
-				expected.AddRow(row...)
-			}
-
 			states := loadTestStates(t, tt.name)
 
-			got := table.Table{}
-			o.populateTable(&got, states)
+			got := o.populateTable(states)
 
-			if !reflect.DeepEqual(got.Rows, expected.Rows) {
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetJenkinsXTable() got = %v, want %v", got, tt.want)
 			}
 		})

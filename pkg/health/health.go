@@ -1,9 +1,13 @@
 package health
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"sort"
+	"strings"
+
+	"github.com/liggitt/tabwriter"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/knative_pkg/duck"
 
@@ -18,9 +22,7 @@ import (
 	"github.com/Comcast/kuberhealthy/v2/pkg/khstatecrd"
 
 	"github.com/jenkins-x-plugins/jx-health/pkg/options"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/table"
 	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
@@ -38,7 +40,7 @@ type Options struct {
 	InfoData lookup.LoopkupData
 }
 
-func (o Options) GetJenkinsXTable(result *table.Table, ns string) error {
+func (o Options) GetJenkinsXTable(w *tabwriter.Writer, ns string) error {
 
 	err := o.KHCheckOptions.Validate()
 	if err != nil {
@@ -51,25 +53,30 @@ func (o Options) GetJenkinsXTable(result *table.Table, ns string) error {
 		return errors.Wrapf(err, "failed to list health states in namespace %s", ns)
 	}
 
-	o.populateTable(result, states)
-
+	rows := o.populateTable(states)
+	for _, row := range rows {
+		fmt.Fprintln(w, strings.Join(row, "\t"))
+	}
 	return nil
 }
 
-func (o Options) populateTable(result *table.Table, checks *khstatecrd.KuberhealthyStateList) {
+func (o Options) populateTable(checks *khstatecrd.KuberhealthyStateList) [][]string {
 
 	sort.Slice(checks.Items, func(i, j int) bool {
 		return checks.Items[i].Name < checks.Items[j].Name
 	})
 
+	var rows [][]string
 	// add Kuberhealthy check results to the table
 	for _, check := range checks.Items {
-		o.populateRow(result, check)
-
+		rows = append(rows, o.populateRow(check)...)
 	}
+	return rows
 }
 
-func (o Options) populateRow(result *table.Table, check khstatecrd.KuberhealthyState) {
+func (o Options) populateRow(check khstatecrd.KuberhealthyState) [][]string {
+	var rows [][]string
+
 	status := termcolor.ColorInfo("OK")
 	if !check.Spec.OK {
 		status = termcolor.ColorError("ERROR")
@@ -90,24 +97,27 @@ func (o Options) populateRow(result *table.Table, check khstatecrd.KuberhealthyS
 		if o.Info {
 			rowEntries = append(rowEntries, informationDetail)
 		}
-		result.AddRow(rowEntries...)
+		rows = append(rows, rowEntries)
 	} else {
 		rowEntries = append(rowEntries, check.Spec.Errors[0])
 		if o.Info {
 			rowEntries = append(rowEntries, informationDetail)
 		}
-		result.AddRow(rowEntries...)
+		rows = append(rows, rowEntries)
 
 		// if we have multiple errors lets format the table so all errors appear underneath in the column
 		if len(check.Spec.Errors) > 1 {
 			for i := 1; i < len(check.Spec.Errors); i++ {
-				result.AddRow("", "", "", check.Spec.Errors[i])
+				//result.AddRow("", "", "", check.Spec.Errors[i])
+				rowEntries = []string{"", "", "", check.Spec.Errors[i]}
+				rows = append(rows, rowEntries)
 			}
 		}
 	}
+	return rows
 }
 
-func (o Options) WatchStates(cfg *rest.Config) error {
+func (o Options) WatchStates(table *tabwriter.Writer, cfg *rest.Config, namespace string) error {
 
 	// Grab a dynamic interface that we can create informers from
 	dc, err := dynamic.NewForConfig(cfg)
@@ -116,14 +126,14 @@ func (o Options) WatchStates(cfg *rest.Config) error {
 	}
 	// Create a factory object that we can say "hey, I need to watch this resource"
 	// and it will give us back an informer for it
-	f := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dc, 0, v1.NamespaceAll, nil)
+	f := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dc, 0, namespace, nil)
 	// Retrieve a "GroupVersionResource" type that we need when generating our informer from our dynamic factory
 	gvr, _ := schema.ParseResourceArg("khstates.v1.comcast.github.io")
 	// Finally, create our informer for deployments!
 	i := f.ForResource(*gvr)
 
 	stopCh := make(chan struct{})
-	go o.startWatching(stopCh, i.Informer())
+	go o.startWatching(stopCh, i.Informer(), table)
 	sigCh := make(chan os.Signal)
 	signal.Notify(sigCh, os.Kill, os.Interrupt)
 	<-sigCh
@@ -132,7 +142,7 @@ func (o Options) WatchStates(cfg *rest.Config) error {
 	return nil
 }
 
-func (o Options) startWatching(stopCh <-chan struct{}, s cache.SharedIndexInformer) {
+func (o Options) startWatching(stopCh <-chan struct{}, s cache.SharedIndexInformer, table *tabwriter.Writer) {
 	handlers := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			newUnstructured := obj.(*unstructured.Unstructured)
@@ -143,7 +153,7 @@ func (o Options) startWatching(stopCh <-chan struct{}, s cache.SharedIndexInform
 				log.Logger().Infof("error converting unstructured object %s into KuberhealthyState: %v", newUnstructured.GetName(), err)
 				return
 			}
-			o.writeRow(newState)
+			o.writeRow(newState, table)
 		},
 		UpdateFunc: func(oldObj, obj interface{}) {
 
@@ -166,7 +176,7 @@ func (o Options) startWatching(stopCh <-chan struct{}, s cache.SharedIndexInform
 			}
 
 			if newState.Spec.OK != oldState.Spec.OK {
-				o.writeRow(newState)
+				o.writeRow(newState, table)
 			}
 		},
 	}
@@ -174,15 +184,19 @@ func (o Options) startWatching(stopCh <-chan struct{}, s cache.SharedIndexInform
 	s.Run(stopCh)
 }
 
-func (o Options) writeRow(state *khstatecrd.KuberhealthyState) {
+func (o Options) writeRow(state *khstatecrd.KuberhealthyState, table *tabwriter.Writer) {
 
 	// because we are using a dynamic resource informer we are receiving unstructured objects which dont have the .spec
 	// details, so we need to look it up
 	//rs, err := o.StateClient.Get(metav1.GetOptions{}, resourceStates, state.GetName(), state.GetNamespace())
 
 	dereferencedState := *state
-	t := table.CreateTable(os.Stdout)
-	o.populateRow(&t, dereferencedState)
+	//t := table.CreateTable(os.Stdout)
+	//t.Clear()
 
-	t.Render()
+	rows := o.populateRow(dereferencedState)
+	for _, row := range rows {
+		fmt.Fprintln(table, strings.Join(row, "\t"))
+	}
+	table.Flush()
 }
