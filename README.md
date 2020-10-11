@@ -8,7 +8,19 @@
 
 jx-health is a small command line tool working with health statuses from [Kuberhealthy](https://github.com/Comcast/kuberhealthy)
 
-Using Kuberhealthy and custom checks we are able to report of the health of a Jenkins X installation by only reading the Kuberhealthy state custom resources.  This is good for user RBAC restricted environments as the Kuebrhealthy checks run with a Kubernetes service account to validate things like secrets, without revealing any sensitive data and report errors when a user may not have access.   
+Using Kuberhealthy and custom checks we are able to report of the health of a Jenkins X installation by only reading the Kuberhealthy state custom resources.  This is good for user RBAC restricted environments as the Kuebrhealthy checks run with a Kubernetes service account to validate things like secrets, without revealing any sensitive data and report errors when a user may not have access.
+
+## RBAC requirements
+The required RBAC needed for users of this command:
+
+| Resource | Role | Namespace | Reason |
+| -------- | ---- | --------- | ------ |
+| Deployments | Get | kuberhealthy | used to verify Kuberhealthy is running |
+| khstates.v1.comcast.github.io | List | kuberhealthy | used to return the status of default Kuberhealthy checks |
+| khstates.v1.comcast.github.io | Watch | kuberhealthy | used to watch the status of default Kuberhealthy checks |
+| khstates.v1.comcast.github.io | List | * | used to return the status of Jenkins X and custom Kuberhealthy checks in all namespaces |
+| khstates.v1.comcast.github.io | Watch | * | used to watch the status of Jenkins X and custom Kuberhealthy checks in all namespaces |
+
 ## Getting Started
 
 Download the [jx-health binary](https://github.com/jenkins-x-plugins/jx-health/releases) for your operating system and add it to your `$PATH`.
