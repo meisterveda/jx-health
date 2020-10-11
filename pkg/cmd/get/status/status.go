@@ -1,9 +1,12 @@
 package status
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	v1 "k8s.io/api/core/v1"
 
@@ -28,6 +31,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
+
+const kuberhealthyNamespace = "kuberhealthy"
 
 var (
 	cmdLong = templates.LongDesc(`
@@ -106,6 +111,16 @@ func (o *Options) Validate() error {
 		if err != nil {
 			log.Logger().Warnf("unable to lookup health check information: %v", err)
 		}
+	}
+
+	// check kuberhealthy is installed
+	d, err := o.KubeClient.AppsV1().Deployments(kuberhealthyNamespace).Get(context.TODO(), "kuberhealthy", metav1.GetOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "error finding kuberhealthy running in the %s namespace, is it installed?", kuberhealthyNamespace)
+	}
+
+	if *d.Spec.Replicas != d.Status.ReadyReplicas {
+		return errors.Wrapf(err, "not all kuberhealthy pods are running in the %s namespace, expected %d got %d?", kuberhealthyNamespace, d.Spec.Replicas, d.Status.ReadyReplicas)
 	}
 	return nil
 }
