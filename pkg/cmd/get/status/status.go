@@ -114,23 +114,23 @@ func (o *Options) Validate() error {
 	}
 
 	// check kuberhealthy is installed
-	err2, done := o.verifyKuberhealthyRunning(err)
-	if done {
-		return err2
+	err = o.verifyKuberhealthyRunning(err)
+	if err != nil {
+		return errors.Wrapf(err, "failed to verify Kuberheathy is running")
 	}
 	return nil
 }
 
-func (o *Options) verifyKuberhealthyRunning(err error) (error, bool) {
+func (o *Options) verifyKuberhealthyRunning(err error) error {
 	d, err := o.KubeClient.AppsV1().Deployments(kuberhealthyNamespace).Get(context.TODO(), "kuberhealthy", metav1.GetOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "error finding kuberhealthy running in the %s namespace, is it installed?", kuberhealthyNamespace), true
+		return errors.Wrapf(err, "error finding kuberhealthy running in the %s namespace, is it installed?", kuberhealthyNamespace)
 	}
 
 	if *d.Spec.Replicas != d.Status.ReadyReplicas {
-		return errors.Wrapf(err, "not all kuberhealthy pods are running in the %s namespace, expected %d got %d?", kuberhealthyNamespace, d.Spec.Replicas, d.Status.ReadyReplicas), true
+		return errors.Wrapf(err, "not all kuberhealthy pods are running in the %s namespace, expected %d got %d?", kuberhealthyNamespace, d.Spec.Replicas, d.Status.ReadyReplicas)
 	}
-	return nil, false
+	return nil
 }
 
 // Run transforms the YAML files

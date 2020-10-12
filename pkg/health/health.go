@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"reflect"
 	"sort"
 	"strings"
 
@@ -16,8 +17,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/jenkins-x-plugins/jx-health/pkg/health/lookup"
-
-	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 
 	"github.com/Comcast/kuberhealthy/v2/pkg/khstatecrd"
 
@@ -55,7 +54,10 @@ func (o Options) GetJenkinsXTable(w *tabwriter.Writer, ns string) error {
 
 	rows := o.populateTable(states)
 	for _, row := range rows {
-		fmt.Fprintln(w, strings.Join(row, "\t"))
+		_, err = fmt.Fprintln(w, strings.Join(row, "\t"))
+		if err != nil {
+			log.Logger().Infof("error formatting row: %v", err)
+		}
 	}
 	return nil
 }
@@ -77,9 +79,9 @@ func (o Options) populateTable(checks *khstatecrd.KuberhealthyStateList) [][]str
 func (o Options) populateRow(check khstatecrd.KuberhealthyState) [][]string {
 	var rows [][]string
 
-	status := termcolor.ColorInfo("OK")
+	status := "OK"
 	if !check.Spec.OK {
-		status = termcolor.ColorError("ERROR")
+		status = "ERROR"
 	}
 
 	// get matching information link
@@ -108,7 +110,6 @@ func (o Options) populateRow(check khstatecrd.KuberhealthyState) [][]string {
 		// if we have multiple errors lets format the table so all errors appear underneath in the column
 		if len(check.Spec.Errors) > 1 {
 			for i := 1; i < len(check.Spec.Errors); i++ {
-				//result.AddRow("", "", "", check.Spec.Errors[i])
 				rowEntries = []string{"", "", "", check.Spec.Errors[i]}
 				rows = append(rows, rowEntries)
 			}
@@ -175,7 +176,7 @@ func (o Options) startWatching(stopCh <-chan struct{}, s cache.SharedIndexInform
 				return
 			}
 
-			if newState.Spec.OK != oldState.Spec.OK {
+			if newState.Spec.OK != oldState.Spec.OK || !reflect.DeepEqual(newState.Spec.Errors, oldState.Spec.Errors) {
 				o.writeRow(newState, table)
 			}
 		},
@@ -186,17 +187,15 @@ func (o Options) startWatching(stopCh <-chan struct{}, s cache.SharedIndexInform
 
 func (o Options) writeRow(state *khstatecrd.KuberhealthyState, table *tabwriter.Writer) {
 
-	// because we are using a dynamic resource informer we are receiving unstructured objects which dont have the .spec
-	// details, so we need to look it up
-	//rs, err := o.StateClient.Get(metav1.GetOptions{}, resourceStates, state.GetName(), state.GetNamespace())
-
-	dereferencedState := *state
-	//t := table.CreateTable(os.Stdout)
-	//t.Clear()
-
-	rows := o.populateRow(dereferencedState)
+	rows := o.populateRow(*state)
 	for _, row := range rows {
-		fmt.Fprintln(table, strings.Join(row, "\t"))
+		_, err := fmt.Fprintln(table, strings.Join(row, "\t"))
+		if err != nil {
+			log.Logger().Infof("error formatting row: %v", err)
+		}
 	}
-	table.Flush()
+	err := table.Flush()
+	if err != nil {
+		log.Logger().Infof("error printing row: %v", err)
+	}
 }
