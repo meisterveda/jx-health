@@ -36,6 +36,10 @@ Namespace in current context is ignored even if specified with \-\-namespace.
 \fB\-n\fP, \fB\-\-namespace\fP=""
     namespace to get status checks, defaults to current namespace
 
+.PP
+\fB\-w\fP, \fB\-\-watch\fP[=false]
+    after listing/getting the requested object, watch for changes
+
 
 .SH EXAMPLE
 .PP
@@ -49,6 +53,10 @@ Namespace in current context is ignored even if specified with \-\-namespace.
 .PP
 # prints all health statuses for all accessible namespace
   jx\-health get status \-\-all\-namespaces
+
+.PP
+# watch health statuses
+  jx\-health get status \-\-watch
 
 
 .SH SEE ALSO
