@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"syscall"
 
 	"github.com/liggitt/tabwriter"
 
@@ -135,8 +136,8 @@ func (o Options) WatchStates(table *tabwriter.Writer, cfg *rest.Config, namespac
 
 	stopCh := make(chan struct{})
 	go o.startWatching(stopCh, i.Informer(), table)
-	sigCh := make(chan os.Signal)
-	signal.Notify(sigCh, os.Kill, os.Interrupt)
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	<-sigCh
 	close(stopCh)
 
