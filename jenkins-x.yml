@@ -1,19 +1,27 @@
-buildPack: go-cli
+buildPack: none
 dockerRegistryOwner: jenkinsxio
 pipelineConfig:
   pipelines:
-    overrides:
-    - name: helm-template
-      step:
-        sh: echo disabled
-    - name: make-linux
-      step:
-        sh: make linux
-        image: golang:1.15
-    - name: make-test
-      step:
-        sh: make test
-        image: golang:1.15
+    pullRequest:
+      pipeline:
+        stages:
+          - agent:
+              image: golang:1.15
+            name: ci
+            options:
+              containerOptions:
+                resources:
+                  limits:
+                    cpu: 3
+                    memory: 6072Mi
+                  requests:
+                    cpu: 2
+                    memory: 4048Mi
+            steps:
+              - name: test
+                command: make test
+              - name: lint
+                command: make lint
 
     release:
       pipeline:
