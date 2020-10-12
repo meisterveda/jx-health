@@ -9,6 +9,8 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+
 	"github.com/liggitt/tabwriter"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/knative_pkg/duck"
@@ -80,7 +82,7 @@ func (o Options) populateTable(checks *khstatecrd.KuberhealthyStateList) [][]str
 func (o Options) populateRow(check khstatecrd.KuberhealthyState) [][]string {
 	var rows [][]string
 
-	status := "OK"
+	status := termcolor.ColorInfo("OK")
 	if !check.Spec.OK {
 		status = "ERROR"
 	}
