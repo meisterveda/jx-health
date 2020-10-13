@@ -7,15 +7,15 @@ dns-status-internal:
 dns-status-external:
   https://github.com/Comcast/kuberhealthy/blob/230c4f1/cmd/dns-resolution-check/README.md
 jx-bot-token:
-  https://github.com/jenkins-x-plugins/jx-kh-check/blob/master/cmd/jx-bot-token/README.md,https://jenkins-x.io/community
+  https://github.com/jenkins-x-plugins/jx-kh-check/blob/master/cmd/jx-bot-token/README.md
 jx-core:
-  https://github.com/jenkins-x-plugins/jx-kh-check/blob/master/cmd/jx-core/README.md,https://jenkins-x.io/community
+  https://github.com/jenkins-x-plugins/jx-kh-check/blob/master/cmd/jx-core/README.md
 jx-install:
-  https://github.com/jenkins-x-plugins/jx-kh-check/blob/master/cmd/jx-install/README.md,https://jenkins-x.io/community
+  https://github.com/jenkins-x-plugins/jx-kh-check/blob/master/cmd/jx-install/README.md
 jx-secrets:
-  https://github.com/jenkins-x-plugins/jx-kh-check/blob/master/cmd/jx-secrets/README.md,https://jenkins-x.io/community
+  https://github.com/jenkins-x-plugins/jx-kh-check/blob/master/cmd/jx-secrets/README.md
 jx-webhooks:
-  https://github.com/jenkins-x-plugins/jx-kh-check/blob/master/cmd/jx-webhooks/README.md,https://jenkins-x.io/community
+  https://github.com/jenkins-x-plugins/jx-kh-check/blob/master/cmd/jx-webhooks/README.md
 network-connection-check:
   https://github.com/Comcast/kuberhealthy/blob/230c4f1/cmd/network-connection-check/README.md
 pod-restarts:
