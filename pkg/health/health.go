@@ -82,9 +82,9 @@ func (o Options) populateTable(checks *khstatecrd.KuberhealthyStateList) [][]str
 func (o Options) populateRow(check khstatecrd.KuberhealthyState) [][]string {
 	var rows [][]string
 
-	status := termcolor.ColorInfo("OK")
-	if !check.Spec.OK {
-		status = "ERROR"
+	status := "ERROR"
+	if check.Spec.OK {
+		status = termcolor.ColorInfo("OK")
 	}
 
 	// get matching information link
@@ -170,7 +170,7 @@ func (o Options) startWatching(stopCh <-chan struct{}, s cache.SharedIndexInform
 				return
 			}
 
-			oldUnstructured := obj.(*unstructured.Unstructured)
+			oldUnstructured := oldObj.(*unstructured.Unstructured)
 			oldState := &khstatecrd.KuberhealthyState{}
 
 			err = duck.FromUnstructured(oldUnstructured, oldState)
