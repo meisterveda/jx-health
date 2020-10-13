@@ -55,7 +55,7 @@ func TestHealthOptions_GetJenkinsXTable(t *testing.T) {
 			got := o.populateTable(states)
 
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetJenkinsXTable() got = %v, want %v", got, tt.want)
+				t.Errorf("WriteStatusTable() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

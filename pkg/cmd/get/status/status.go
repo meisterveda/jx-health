@@ -54,7 +54,7 @@ var (
 	`)
 )
 
-// LabelOptions the options for the command
+// Options the options for the command
 type Options struct {
 	HealthOptions healthopts.Options
 	Args          []string
@@ -117,14 +117,14 @@ func (o *Options) Validate() error {
 	}
 
 	// check kuberhealthy is installed
-	err = o.verifyKuberhealthyRunning(err)
+	err = o.verifyKuberhealthyRunning()
 	if err != nil {
 		return errors.Wrapf(err, "failed to verify Kuberheathy is running")
 	}
 	return nil
 }
 
-func (o *Options) verifyKuberhealthyRunning(err error) error {
+func (o *Options) verifyKuberhealthyRunning() error {
 	d, err := o.KubeClient.AppsV1().Deployments(kuberhealthyNamespace).Get(context.TODO(), "kuberhealthy", metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "error finding kuberhealthy running in the %s namespace, is it installed?", kuberhealthyNamespace)
@@ -165,11 +165,10 @@ func (o *Options) Run() error {
 			return errors.Wrapf(err, "failed to watch health states")
 		}
 	} else {
-		err := o.HealthOptions.GetJenkinsXTable(table, namespace)
+		err := o.HealthOptions.WriteStatusTable(table, namespace)
 		if err != nil {
 			return errors.Wrapf(err, "failed to build health table, is Kuberhealthy installed?")
 		}
-		table.Flush()
 	}
 
 	return nil
