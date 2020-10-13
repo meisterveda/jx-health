@@ -25,7 +25,7 @@ const (
 	TestVersion = "1.0.0-SNAPSHOT"
 )
 
-// ShowOptions the options for viewing running PRs
+// Options the options for viewing running PRs
 type Options struct {
 	Verbose bool
 }
@@ -52,6 +52,7 @@ func (o *Options) Run() error {
 	return nil
 }
 
+// GetVersion get the version for this plugin
 func GetVersion() string {
 	if Version != "" {
 		return Version

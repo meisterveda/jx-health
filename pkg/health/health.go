@@ -42,7 +42,8 @@ type Options struct {
 	InfoData lookup.LoopkupData
 }
 
-func (o Options) GetJenkinsXTable(w *tabwriter.Writer, ns string) error {
+// WriteStatusTable returns a table containing statuses
+func (o Options) WriteStatusTable(table *tabwriter.Writer, ns string) error {
 
 	err := o.KHCheckOptions.Validate()
 	if err != nil {
@@ -57,11 +58,12 @@ func (o Options) GetJenkinsXTable(w *tabwriter.Writer, ns string) error {
 
 	rows := o.populateTable(states)
 	for _, row := range rows {
-		_, err = fmt.Fprintln(w, strings.Join(row, "\t"))
+		_, err = fmt.Fprintln(table, strings.Join(row, "\t"))
 		if err != nil {
 			log.Logger().Infof("error formatting row: %v", err)
 		}
 	}
+	table.Flush()
 	return nil
 }
 
@@ -121,6 +123,7 @@ func (o Options) populateRow(check khstatecrd.KuberhealthyState) [][]string {
 	return rows
 }
 
+// WatchStates will watch for new and updates to Kuberhealthy checks and write rows when changes happen
 func (o Options) WatchStates(table *tabwriter.Writer, cfg *rest.Config, namespace string) error {
 
 	// Grab a dynamic interface that we can create informers from
