@@ -41,9 +41,9 @@ Download the [jx-health binary](https://github.com/jenkins-x-plugins/jx-health/r
 
 ### Install serverside helm charts
 
-Choose one of the options below:
+Choose one of the two options below:
 
-#### Using vanilla Helm
+#### 1. Using vanilla Helm
 ```
 helm repo add kuberhealthy https://comcast.github.io/kuberhealthy/helm-repos
 helm install kuberhealthy kuberhealthy/kuberhealthy -n kuberhealthy --set check.daemonset.enabled=true --set check.deployment.enabled=true --set check.dnsInternal.enabled=true --set check.networkConnection.enabled=true
@@ -59,7 +59,7 @@ helm install health-checks-install jx3/jx-kh-check -n jx-git-operator --set jxIn
 jx-health get status --all-namespaces --watch
 ```
 
-#### Using Jenkins X 3.x (alpha)
+#### 2. Using Jenkins X 3.x (alpha)
 If using Jenkins X 3 alpha then you get the benefits of a top level CLI to manage upgrades and GitOps for you cluster.
 
 Get the plugin by running
