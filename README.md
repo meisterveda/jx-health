@@ -55,6 +55,9 @@ helm install cluster-checks jx3/jx-kh-check -n kuberhealthy --set jxPodStatus.en
 helm install health-checks-jx jx3/jx-kh-check -n jx --set jxWebhooks.enabled=true --set jxBotToken.enabled=true
 helm install health-checks-install jx3/jx-kh-check -n jx-git-operator --set jxInstall.enabled=true
 ``` 
+```
+jx-health get status --all-namespaces --watch
+```
 
 #### Using Jenkins X 3.x (alpha)
 If using Jenkins X 3 alpha then you get the benefits of a top level CLI to manage upgrades and GitOps for you cluster.
@@ -90,7 +93,7 @@ get the check statuses
 ```
 jx health get status --all-namespaces --watch
 ```
-[![asciicast](https://asciinema.org/a/NIVl2oIzWNlz1cZ9GhJ2y7qA7.svg)](https://asciinema.org/a/NIVl2oIzWNlz1cZ9GhJ2y7qA7)
+[![asciicast](https://asciinema.org/a/NIVl2oIzWNlz1cZ9GhJ2y7qA7.svg)](https://asciinema.org/a/NIVl2oIzWNlz1cZ9GhJ2y7qA7?autoplay=1)
 
 or using the [Jenkins X Octant plugin](https://github.com/jenkins-x/octant-jx)
 
