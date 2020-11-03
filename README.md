@@ -51,7 +51,7 @@ helm install kuberhealthy kuberhealthy/kuberhealthy -n kuberhealthy --set check.
 optionally install the Jenkins X 3.x custom health checks
 ```
 helm repo add jx3 https://storage.googleapis.com/jenkinsxio/charts
-helm install cluster-checks jx3/jx-kh-check -n kuberhealthy --set jxPodStatus.enabled=true --set jxPodStatus.cluster.enabled=true --set jxSecrets.enabled=true --set jxSecrets.cluster.enabled=true  
+helm install cluster-checks jx3/jx-kh-check -n kuberhealthy --set jxPodStatus.enabled=true --set jxPodStatus.cluster.enabled=true --set jxSecrets.enabled=true --set jxSecrets.cluster.enabled=true --create-namespace
 helm install health-checks-jx jx3/jx-kh-check -n jx --set jxWebhooks.enabled=true --set jxBotToken.enabled=true
 helm install health-checks-install jx3/jx-kh-check -n jx-git-operator --set jxInstall.enabled=true
 ``` 
