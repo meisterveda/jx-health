@@ -12,11 +12,14 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
-	k8s.io/api v0.19.2
-	k8s.io/apimachinery v0.19.2
+	k8s.io/api v0.19.3
+	k8s.io/apimachinery v0.19.3
 	k8s.io/client-go v0.19.2
 	k8s.io/kubernetes v1.14.7
 	sigs.k8s.io/yaml v1.2.0
 )
+
+// lets use a PR of kuberhealthy until this PR is merged: https://github.com/Comcast/kuberhealthy/pull/758
+replace github.com/Comcast/kuberhealthy/v2 => github.com/jstrachan/kuberhealthy/v2 v2.3.2-0.20201211103805-042693101caa
 
 go 1.15

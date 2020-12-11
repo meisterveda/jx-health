@@ -9,6 +9,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/Comcast/kuberhealthy/v2/pkg/khcheckcrd"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 
 	"github.com/liggitt/tabwriter"
@@ -34,6 +35,7 @@ import (
 )
 
 const resourceStates = "khstates"
+const resourceChecks = "khchecks"
 
 // Options common CLI arguments for working with health
 type Options struct {
@@ -53,8 +55,16 @@ func (o Options) WriteStatusTable(table *tabwriter.Writer, ns string) error {
 	// get a list of all Kuberhealthy states
 	states, err := o.KHCheckOptions.StateClient.List(metav1.ListOptions{}, resourceStates, ns)
 	if err != nil {
-		return errors.Wrapf(err, "failed to list health states in namespace %s", ns)
+		return errors.Wrapf(err, "failed to list resource %s in namespace %s", resourceStates, ns)
 	}
+
+	// get a list of all Kuberhealthy checks
+	checks, err := o.KHCheckOptions.CheckClient.List(metav1.ListOptions{}, resourceChecks, ns)
+	if err != nil {
+		return errors.Wrapf(err, "failed to list resource %s in namespace %s", resourceChecks, ns)
+	}
+
+	o.annotateStates(states, checks)
 
 	rows := o.populateTable(states)
 	for _, row := range rows {
@@ -90,7 +100,13 @@ func (o Options) populateRow(check khstatecrd.KuberhealthyState) [][]string {
 	}
 
 	// get matching information link
-	informationDetail := o.InfoData.Info[check.Name]
+	informationDetail := ""
+	if check.Annotations != nil {
+		informationDetail = check.Annotations["docs.jenkins-x.io"]
+	}
+	if informationDetail == "" {
+		informationDetail = o.InfoData.Info[check.Name]
+	}
 
 	// depending on if there are errors or how many there are we want to format the table to it is easy to consume
 	// Name | Namespace | Status | Error Message        | Info (optional)
@@ -203,5 +219,28 @@ func (o Options) writeRow(state *khstatecrd.KuberhealthyState, table *tabwriter.
 	err := table.Flush()
 	if err != nil {
 		log.Logger().Infof("error printing row: %v", err)
+	}
+}
+
+func (o Options) annotateStates(stateList *khstatecrd.KuberhealthyStateList, checkList *khcheckcrd.KuberhealthyCheckList) {
+	m := map[string]*khcheckcrd.KuberhealthyCheck{}
+	for i := range checkList.Items {
+		check := &checkList.Items[i]
+		m[check.Name] = check
+	}
+
+	for i := range stateList.Items {
+		state := &stateList.Items[i]
+		check := m[state.Name]
+		if check != nil && check.Annotations != nil {
+			if state.Annotations == nil {
+				state.Annotations = map[string]string{}
+			}
+			for k, v := range check.Annotations {
+				if state.Annotations[k] == "" {
+					state.Annotations[k] = v
+				}
+			}
+		}
 	}
 }
