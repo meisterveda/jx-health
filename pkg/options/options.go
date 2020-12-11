@@ -19,6 +19,7 @@ const checkCRDVersion = "v1"
 // KHCheckOptions common CLI arguments for working with health
 type KHCheckOptions struct {
 	StateClient *khstatecrd.KuberhealthyStateClient
+	CheckClient *khcheckcrd.KuberhealthyCheckClient
 }
 
 // Validate validates the options and returns the KuberhealthyCheckClient
@@ -32,6 +33,13 @@ func (o *KHCheckOptions) Validate() error {
 
 	if o.StateClient == nil {
 		o.StateClient, err = ClientStateClient(cfg, checkCRDGroup, checkCRDVersion)
+		if err != nil {
+			return errors.Wrap(err, "failed to create kuberhealthy check client")
+		}
+	}
+
+	if o.CheckClient == nil {
+		o.CheckClient, err = ClientCheckClient(cfg, checkCRDGroup, checkCRDVersion)
 		if err != nil {
 			return errors.Wrap(err, "failed to create kuberhealthy check client")
 		}
@@ -58,4 +66,24 @@ func ClientStateClient(cfg *rest.Config, groupName string, groupVersion string) 
 	client, err := rest.RESTClientFor(&config)
 
 	return khstatecrd.CreateClient(client), err
+}
+
+// ClientStateClient creates a rest client to use for interacting with Kuberhealthy check CRDs
+func ClientCheckClient(cfg *rest.Config, groupName string, groupVersion string) (*khcheckcrd.KuberhealthyCheckClient, error) {
+	var err error
+
+	err = khcheckcrd.ConfigureScheme(groupName, groupVersion)
+	if err != nil {
+		return &khcheckcrd.KuberhealthyCheckClient{}, err
+	}
+
+	config := *cfg
+	config.ContentConfig.GroupVersion = &schema.GroupVersion{Group: groupName, Version: groupVersion}
+	config.APIPath = "/apis"
+	config.NegotiatedSerializer = serializer.WithoutConversionCodecFactory{CodecFactory: scheme.Codecs}
+	config.UserAgent = rest.DefaultKubernetesUserAgent()
+
+	client, err := rest.RESTClientFor(&config)
+
+	return khcheckcrd.CreateClient(client), err
 }
