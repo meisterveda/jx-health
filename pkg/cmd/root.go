@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/jenkins-x-plugins/jx-health/pkg/cmd/get"
+	"github.com/jenkins-x-plugins/jx-health/pkg/cmd/status"
 	"github.com/jenkins-x-plugins/jx-health/pkg/cmd/version"
 	"github.com/jenkins-x-plugins/jx-health/pkg/rootcmd"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras"
@@ -21,7 +21,7 @@ func Main() *cobra.Command {
 			}
 		},
 	}
-	cmd.AddCommand(get.NewCmdGet())
+	cmd.AddCommand(cobras.SplitCommand(status.NewCmdStatus()))
 	cmd.AddCommand(cobras.SplitCommand(version.NewCmdVersion()))
 
 	return cmd
