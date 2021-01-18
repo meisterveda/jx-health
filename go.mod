@@ -10,8 +10,8 @@ require (
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
-	github.com/jenkins-x/jx-api/v4 v4.0.21 // indirect
-	github.com/jenkins-x/jx-helpers/v3 v3.0.62
+	github.com/jenkins-x/jx-api/v4 v4.0.23 // indirect
+	github.com/jenkins-x/jx-helpers/v3 v3.0.63
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.1
 	github.com/jenkins-x/jx-logging/v3 v3.0.3
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de
@@ -20,9 +20,9 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392 // indirect
-	k8s.io/api v0.19.3
-	k8s.io/apimachinery v0.19.3
-	k8s.io/client-go v0.19.2
+	k8s.io/api v0.20.2
+	k8s.io/apimachinery v0.20.2
+	k8s.io/client-go v0.20.2
 	k8s.io/kubernetes v1.14.7
 	sigs.k8s.io/yaml v1.2.0
 )
