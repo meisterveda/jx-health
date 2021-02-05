@@ -34,6 +34,12 @@ require (
 	sigs.k8s.io/yaml v1.2.0
 )
 
+replace (
+	k8s.io/api => k8s.io/api v0.20.2
+	k8s.io/apimachinery => k8s.io/apimachinery v0.20.2
+	k8s.io/client-go => k8s.io/client-go v0.20.2
+)
+
 // lets use a PR of kuberhealthy until this PR is merged: https://github.com/Comcast/kuberhealthy/pull/758
 replace github.com/Comcast/kuberhealthy/v2 => github.com/jstrachan/kuberhealthy/v2 v2.3.2-0.20201211103805-042693101caa
 
