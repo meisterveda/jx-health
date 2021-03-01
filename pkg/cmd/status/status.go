@@ -3,6 +3,7 @@ package status
 import (
 	"context"
 	"fmt"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"os"
 	"strings"
 
@@ -35,6 +36,8 @@ import (
 const kuberhealthyNamespace = "kuberhealthy"
 
 var (
+	info = termcolor.ColorInfo
+
 	cmdLong = templates.LongDesc(`
 		Prints health statuses in a table
 `)
@@ -43,11 +46,14 @@ var (
 		# prints all health statuses for the current namespace in a table
 		%s get status
 
-		# prints all health statuses for a specific namespace
-		%s get status --namespace
-
 		# prints all health statuses for all accessible namespace
 		%s get status --all-namespaces
+
+		# prints all health statuses for all accessible namespace
+		%s get status -A
+
+		# prints all health statuses for a specific namespace
+		%s get status --namespace mything
 
 		# watch health statuses
 		%s get status --watch
@@ -56,13 +62,17 @@ var (
 
 // Options the options for the command
 type Options struct {
-	HealthOptions healthopts.Options
-	Args          []string
-	AllNamespaces bool
-	Watch         bool
-	Namespace     string
-	KubeClient    kubernetes.Interface
-	cfg           *rest.Config
+	HealthOptions         healthopts.Options
+	Args                  []string
+	Namespace             string
+	KuberhealthyNamespace string
+	KuberhealthyName      string
+	AllNamespaces         bool
+	Watch                 bool
+	FailIfNoKuberhealthy  bool
+	KuberhealthyRunning   bool
+	KubeClient            kubernetes.Interface
+	cfg                   *rest.Config
 }
 
 // NewCmdStatus creates a command object for the command
@@ -74,7 +84,7 @@ func NewCmdStatus() (*cobra.Command, *Options) {
 		Aliases: []string{"statuses"},
 		Short:   "Gets health statuses",
 		Long:    cmdLong,
-		Example: fmt.Sprintf(cmdExample, rootcmd.BinaryName, rootcmd.BinaryName, rootcmd.BinaryName, rootcmd.BinaryName),
+		Example: fmt.Sprintf(cmdExample, rootcmd.BinaryName, rootcmd.BinaryName, rootcmd.BinaryName, rootcmd.BinaryName, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			o.Args = args
 			err := o.Run()
@@ -82,9 +92,13 @@ func NewCmdStatus() (*cobra.Command, *Options) {
 		},
 	}
 
+	cmd.Flags().StringVarP(&o.Namespace, "namespace", "n", "", "namespace to get status checks, defaults to current namespace")
+	cmd.Flags().StringVarP(&o.KuberhealthyNamespace, "kuberhealthy-namespace", "", kuberhealthyNamespace, "namespace that kuberhealthy is running")
+	cmd.Flags().StringVarP(&o.KuberhealthyName, "kuberhealthy", "", "kuberhealthy", "deployment name of kuberhealthy")
+
 	cmd.Flags().BoolVarP(&o.AllNamespaces, "all-namespaces", "A", false, "if present, list the requested object(s) across all namespaces.\nNamespace in current context is ignored even if specified with --namespace.")
 	cmd.Flags().BoolVarP(&o.HealthOptions.Info, "info", "", false, "provide information links for checks")
-	cmd.Flags().StringVarP(&o.Namespace, "namespace", "n", "", "namespace to get status checks, defaults to current namespace")
+	cmd.Flags().BoolVarP(&o.FailIfNoKuberhealthy, "fail-if-missing", "f", false, "fail the status check if kuberhealthy is not running")
 	cmd.Flags().BoolVarP(&o.Watch, "watch", "w", false, "after listing/getting the requested object, watch for changes")
 
 	return cmd, o
@@ -125,14 +139,21 @@ func (o *Options) Validate() error {
 }
 
 func (o *Options) verifyKuberhealthyRunning() error {
-	d, err := o.KubeClient.AppsV1().Deployments(kuberhealthyNamespace).Get(context.TODO(), "kuberhealthy", metav1.GetOptions{})
+	d, err := o.KubeClient.AppsV1().Deployments(o.KuberhealthyNamespace).Get(context.TODO(), o.KuberhealthyName, metav1.GetOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "error finding kuberhealthy running in the %s namespace, is it installed?", kuberhealthyNamespace)
+		if o.FailIfNoKuberhealthy {
+			return errors.Wrapf(err, "error finding kuberhealthy deployment %s running in the %s namespace, is it installed?", o.KuberhealthyName, o.KuberhealthyNamespace)
+		}
+
+		log.Logger().Infof("kuberhealthy is not running in namespace %s with deployment %s", info(o.KuberhealthyName), info(o.KuberhealthyNamespace))
+		log.Logger().Infof("for help on installing kuberhealthy see: %s", info("https://jenkins-x.io/v3/admin/setup/health#install"))
+		return nil
 	}
 
 	if *d.Spec.Replicas != d.Status.ReadyReplicas {
 		return errors.Wrapf(err, "not all kuberhealthy pods are running in the %s namespace, expected %d got %d?", kuberhealthyNamespace, d.Spec.Replicas, d.Status.ReadyReplicas)
 	}
+	o.KuberhealthyRunning = true
 	return nil
 }
 
@@ -141,6 +162,10 @@ func (o *Options) Run() error {
 	err := o.Validate()
 	if err != nil {
 		return errors.Wrapf(err, "failed to validate status options")
+	}
+
+	if !o.KuberhealthyRunning {
+		return nil
 	}
 
 	// add table headers
