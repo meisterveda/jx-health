@@ -3,17 +3,15 @@ package status
 import (
 	"context"
 	"fmt"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"os"
 	"strings"
+
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+	"github.com/liggitt/tabwriter"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	v1 "k8s.io/api/core/v1"
-
-	"github.com/liggitt/tabwriter"
-
-	"k8s.io/kubernetes/pkg/printers"
 
 	"k8s.io/client-go/rest"
 
@@ -34,6 +32,14 @@ import (
 )
 
 const kuberhealthyNamespace = "kuberhealthy"
+
+const (
+	tabwriterMinWidth = 6
+	tabwriterWidth    = 4
+	tabwriterPadding  = 3
+	tabwriterPadChar  = ' '
+	tabwriterFlags    = 7
+)
 
 var (
 	info = termcolor.ColorInfo
@@ -169,8 +175,9 @@ func (o *Options) Run() error {
 	}
 
 	// add table headers
-	table := printers.GetNewTabWriter(os.Stdout)
-	table.Init(os.Stdout, 30, 0, 3, ' ', tabwriter.RememberWidths)
+
+	table := tabwriter.NewWriter(os.Stdout, tabwriterMinWidth, tabwriterWidth, tabwriterPadding, tabwriterPadChar, tabwriterFlags)
+	table.Init(os.Stdout, 30, 0, 3, ' ', 7)
 
 	defaultHeaders := []string{"NAME", "NAMESPACE", "STATUS", "ERROR MESSAGE"}
 	if o.HealthOptions.Info {
