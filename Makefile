@@ -12,7 +12,7 @@ ORG := jenkins-x
 ORG_REPO := $(ORG)/$(NAME)
 RELEASE_ORG_REPO := $(ORG_REPO)
 ROOT_PACKAGE := github.com/$(ORG_REPO)
-GO_VERSION := $(shell $(GO) version | sed -e 's/^[^0-9.]*\([0-9.]*\).*/\1/')
+GO_VERSION := 1.17.9
 GO_DEPENDENCIES := $(call rwildcard,pkg/,*.go) $(call rwildcard,cmd/,*.go)
 
 BRANCH     := $(shell git rev-parse --abbrev-ref HEAD 2> /dev/null  || echo 'unknown')
@@ -120,7 +120,7 @@ linux: ## Build for Linux
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=linux GOARCH=amd64 $(GO) $(BUILD_TARGET) $(BUILDFLAGS) -o build/linux/$(NAME) $(MAIN_SRC_FILE)
 	chmod +x build/linux/$(NAME)
 
-arm: ## Build for ARM
+linux-arm: ## Build for ARM
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=linux GOARCH=arm $(GO) $(BUILD_TARGET) $(BUILDFLAGS) -o build/arm/$(NAME) $(MAIN_SRC_FILE)
 	chmod +x build/arm/$(NAME)
 
@@ -129,6 +129,10 @@ win: ## Build for Windows
 
 darwin: ## Build for OSX
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=darwin GOARCH=amd64 $(GO) $(BUILD_TARGET) $(BUILDFLAGS) -o build/darwin/$(NAME) $(MAIN_SRC_FILE)
+	chmod +x build/darwin/$(NAME)
+
+darwin-arm64: ## Build for OSX
+	CGO_ENABLED=$(CGO_ENABLED) GOOS=darwin GOARCH=arm64 $(GO) $(BUILD_TARGET) $(BUILDFLAGS) -o build/darwin/$(NAME) $(MAIN_SRC_FILE)
 	chmod +x build/darwin/$(NAME)
 
 .PHONY: release
