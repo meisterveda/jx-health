@@ -45,7 +45,7 @@ Choose one of the two options below:
 
 #### 1. Using vanilla Helm
 ```
-helm repo add kuberhealthy https://comcast.github.io/kuberhealthy/helm-repos
+helm repo add kuberhealthy https://kuberhealthy.github.io/kuberhealthy/helm-repos
 helm install kuberhealthy kuberhealthy/kuberhealthy -n kuberhealthy --set check.daemonset.enabled=true --set check.deployment.enabled=true --set check.dnsInternal.enabled=true --set check.networkConnection.enabled=true --create-namespace
 ```
 optionally install the Jenkins X 3.x custom health checks
